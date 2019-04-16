@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>Admin Panel</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="_csrf_header" th:content="${_csrf.headerName}">
+<!--===============================================================================================-->	
+	<link rel="icon" type="image/png" href="images/icons/favicon.ico"/>
+<!--===============================================================================================-->
+<link rel="stylesheet" type="text/css" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+	<link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+<!--===============================================================================================-->
+</head>
+<body>
+<div id="errorAddUser" class="alert alert-warning alert-dismissible fade show" style="display:none;" role="alert">
+  Пользователь с заданным <strong id="errorText"></strong> существует
+  <button type="button" class="close" onclick="hideErrorAddUser();">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</div>
+<form th:action="@{/logout}" method="post" id="logout" style="display:none"></form>
+<table class="table">
+  <thead class="thead-light">
+    <tr>
+      <th scope="col">id</th>
+      <th scope="col">Username</th>
+      <th scope="col">Email</th>
+      <th>
+	  	<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addUser" onclick="clearForm();">Добавить пользователя</button>
+	  	<button type="submit" class="btn btn-secondary" form="logout">Выйти</button>
+	  </th>
+    </tr>
+  </thead>
+  <tbody id="tablebody">
+  </tbody>
+</table>
+
+<!-- Modal -->
+<div class="modal fade" id="addUser" tabindex="-1" role="dialog" aria-labelledby="addUserLabel" aria-hidden="true">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addUserLabel">Добавление пользователя</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form>
+      		<input type="text" id= "username" class="fadeIn second" name="username" placeholder="USERNAME" onchange="changeVisibilityInvalid();">
+      		<input type="text" id= "email" class="fadeIn second" name="email" placeholder="EMAIL" onchange="changeVisibilityInvalid();">
+      		<input type="password" id= "password" class="fadeIn second" name="password" placeholder="PASSWORD" onchange="changeVisibilityInvalid();">
+      		<input type="password" id= "password_confirm" class="fadeIn second" name="password_confirm" placeholder="PASSWORD_CONFIRMATION" onchange="changeVisibilityInvalid();">
+     		<input type="hidden" id= "csrf" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"> 
+      	</form>
+      </div>
+      <div class="modal-footer">
+      <span hidden="true" id="invalidText"> Форма невалидна</span>
+      	<button type="button" class="btn btn-primary" data-dismiss="modal" onclick="checkForm();">Добавить</button>
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">Закрыть</button>        
+      </div>
+    </div>
+  </div>
+</div>
+
+<!--===============================================================================================-->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.0/jquery.min.js"></script>
+	<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+<!--===============================================================================================-->
+
+<style>
+
+#invalidText{
+	color: #ffb200;
+}
+
+input[type=text], input[type=password] {
+  background-color: #f6f6f6;
+  border: none;
+  color: #0d0d0d;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 5px;
+  width: 98%;
+  border: 2px solid #f6f6f6;
+  -webkit-border-radius: 5px 5px 5px 5px;
+  border-radius: 5px 5px 5px 5px;
+}
+
+input[type=text]:focus,  input[type=password]:focus {
+  background-color: #fff;
+  border-bottom: 2px solid #5fbae9;
+}
+
+input[type=text]:placeholder,  input[type=password]:placeholder {
+  color: #cccccc;
+}
+</style>
+<script type="text/javascript">
+
+	function changeVisibilityInvalid(){
+		$("#invalidText").attr("hidden", true);
+	}
+
+	function updateTable(){
+		var xhr = new XMLHttpRequest();
+		xhr.open('GET', '/users', false);
+		var tbody = $("#tablebody");
+		tbody.empty();
+		xhr.onload = function() {
+			var users = JSON.parse(this.responseText);
+			console.dir(users);
+			users.forEach(function(user){
+				console.dir(user);
+				var uid, uname, uemail;
+				
+				if (user.id != null) uid = user.id;
+				else uid = "";
+				if (user.username != null) uname = user.username;
+				else uname = "";
+				
+				if (user.email != null) uemail = user.email;
+				else uemail = "";
+				
+				tbody.append('<tr><td scope = "row">' + uid + '</td><td>' + uname + '</td><td>' + uemail + '</td></tr>');
+			});
+		}
+		xhr.onerror = function() {
+			console.dir( 'Ошибка ' + this.status );
+		}
+		xhr.send();	
+	};
+	updateTable();
+	
+	function checkForm(){
+		console.log(' clickForm called');
+		var header = $('meta[name="_csrf_header"]').attr('content');
+		var csrf = $('#csrf').val();
+		var username = $('#username');
+		var email = $('#email');
+		var pass = $('#password');
+		var passcon = $('#password_confirm');
+		if (username.val() == "" || email.val() == "" || pass.val() == "" || pass.val() != passcon.val())
+			$("#invalidText").attr("hidden", false);
+		else {
+			var data = {
+					'username': username.val(), 'password': pass.val(), 'email': email.val()
+			}; 
+			console.dir(data);
+			
+			var ob = {
+					url: '/users',
+					type: 'post',
+					data: JSON.stringify(data),
+					headers: {'X-CSRF-TOKEN': csrf}, 
+					dataType: 'json',
+					contentType: 'application/json; charset=utf-8',
+					success: function(response){
+								console.log('response: ');
+								console.dir(response);
+								if (response.hasError == true){
+									$('#errorText').text(response.errorText);
+									$('#errorAddUser').show();
+								}
+								else updateTable();
+							}					
+					
+					} 
+			console.dir(ob);
+			$.ajax(ob);
+			
+			
+/*				$.post(
+					'/users', 
+					data, 
+					function(response){
+						console.log('response: ');
+						console.dir(response);
+						updateTable();
+					}); */
+		
+		}
+		return false;
+	}
+	
+	function hideErrorAddUser(){
+		$('#errorAddUser').hide();
+	}
+	
+	function clearForm(){
+		$('#username').val('');
+		$('#email').val('');
+		$('#password').val('');
+		$('#password_confirm').val('');
+	}
+	
+</script>
+</body>
+</html>

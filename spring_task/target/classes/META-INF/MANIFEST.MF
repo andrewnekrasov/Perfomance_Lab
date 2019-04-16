@@ -1,0 +1,10 @@
+Manifest-Version: 1.0
+Built-By: Andrey Nekrasov
+Build-Jdk: 11.0.2
+Implementation-Title: spring_task
+Implementation-Version: 0.0.1-SNAPSHOT
+Implementation-Vendor-Id: ru.nekrasov
+Implementation-URL: https://projects.spring.io/spring-boot/#/spring-boot
+ -starter-parent/spring_task
+Created-By: Maven Integration for Eclipse
+
